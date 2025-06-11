@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from itertools import islice
 
 def _get_knapsack_stream(file_path):
@@ -34,21 +35,22 @@ def _read_problem_values(knapsack_values):
 
     Returns:
         tuple: A tuple containing:
-            - benefits (list): List of n benefit values, one for each item
-            - items (list): List of d lists, where each inner list contains n weights
+            - benefits (numpy.ndarray): Array of n benefit values, one for each item
+            - items (list): List of d numpy.ndarray, where each array contains n weights
                            (items[i][j] is the weight of item j in dimension i)
-            - constraints (list): List of d capacity constraints, one for each dimension
+            - constraints (numpy.ndarray): Array of d capacity constraints, one for each dimension
     '''
     num_of_items, num_of_dimensions, _ = islice(knapsack_values, 3)
     benefits = list(islice(knapsack_values, num_of_items))
     items = []
 
     for _ in range(num_of_dimensions):
-        items.append(list(islice(knapsack_values, num_of_items)))
+        item_list = list(islice(knapsack_values, num_of_items))
+        items.append(np.array(item_list))
 
     dimensions = list(islice(knapsack_values, num_of_dimensions))
 
-    return (benefits, items, dimensions)
+    return (np.array(benefits), items, np.array(dimensions))
 
 
 def generate_knapsack_problems(file_path):
@@ -66,10 +68,10 @@ def generate_knapsack_problems(file_path):
 
     Yields:
         tuple: A tuple containing:
-            - benefits (list): List of n benefit values, one for each item
-            - items (list): List of d lists, where each inner list contains n weights
+            - benefits (numpy.ndarray): Array of n benefit values, one for each item
+            - items (list): List of d numpy.ndarray, where each array contains n weights
                            (items[i][j] is the weight of item j in dimension i)
-            - constraints (list): List of d capacity constraints, one for each dimension
+            - constraints (numpy.ndarray): Array of d capacity constraints, one for each dimension
     '''
     knapsack_values = _get_knapsack_stream(file_path)
     amount_of_problems = int(next(knapsack_values))
