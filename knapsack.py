@@ -2,6 +2,7 @@ from knapsack_reader import generate_knapsack_problems
 import argparse
 import roulette_ga
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def parse_args():
@@ -18,6 +19,12 @@ def is_solution_valid(solution, items, dimensions):
 
     return np.all(solution_dimensions <= dimensions)
 
+def plot_generations(generations_plot):
+    plt.plot([x[0] for x in generations_plot], [x[1] for x in generations_plot])
+    plt.xlabel('Generation')
+    plt.ylabel('Best fitness')
+    plt.savefig('generations.png')
+
 
 def main():
     args = parse_args()
@@ -27,6 +34,7 @@ def main():
     result = roulette_ga.solve_knapsack(benefits, items, dimensions)
     print(f'Best solution: {result['best_solution']}')
     print(f'valid?: {is_solution_valid(result['best_solution'], items, dimensions)}')
+    plot_generations(result['generations_plot'])
 
 
 if __name__ == '__main__':
