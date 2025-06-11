@@ -11,9 +11,10 @@ def parse_args():
 def main():
     args = parse_args()
     first_problem = next(generate_knapsack_problems(args.file))
-    items, constraints = first_problem
+    benefits, items, dimensions = first_problem
+    print(f'Benefits: {benefits}')
     print(f'Items: {items}')
-    print(f'Constraints: {constraints}')
+    print(f'Constraints: {dimensions}')
 
 
 if __name__ == '__main__':

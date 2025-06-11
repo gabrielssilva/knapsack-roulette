@@ -19,32 +19,36 @@ def _get_knapsack_stream(file_path):
                 yield int(value)
 
 
-def _retrieve_all_items(num_of_items, dimensions, knapsack_values):
+def _read_problem_values(knapsack_values):
     '''
-    Parse all items for a multi-dimensional knapsack problem.
+    Parse a single multi-dimensional knapsack problem.
 
-    The problem format for items is:
-    1. n values: benefits for each item
-    2. n*d values: weights for each item in each dimension (d rows of n values)
+    The problem format is:
+    1. First three values: number of items (n), number of dimensions (d), and an unused value
+    2. Next n values: benefits for each item
+    3. Next n*d values: weights for each item in each dimension (d rows of n values)
+    4. Next d values: capacity constraints for each dimension
 
     Args:
-        num_of_items (int): Number of items in the problem
-        dimensions (int): Number of dimensions (constraints) in the problem
         knapsack_values: A generator yielding integer values from the problem file
 
     Returns:
-        list: A list of n tuples, each containing:
-            - benefit (int): The benefit value for the item
-            - weights (tuple): A tuple of ordered weights, one for each dimension
+        tuple: A tuple containing:
+            - benefits (list): List of n benefit values, one for each item
+            - items (list): List of d lists, where each inner list contains n weights
+                           (items[i][j] is the weight of item j in dimension i)
+            - constraints (list): List of d capacity constraints, one for each dimension
     '''
+    num_of_items, num_of_dimensions, _ = islice(knapsack_values, 3)
     benefits = list(islice(knapsack_values, num_of_items))
-    weights = []
+    items = []
 
-    for _ in range(dimensions):
-        weights.append(list(islice(knapsack_values, num_of_items)))
+    for _ in range(num_of_dimensions):
+        items.append(list(islice(knapsack_values, num_of_items)))
 
-    grouped_weights = zip(*weights)
-    return list(zip(benefits, grouped_weights))
+    dimensions = list(islice(knapsack_values, num_of_dimensions))
+
+    return (benefits, items, dimensions)
 
 
 def generate_knapsack_problems(file_path):
@@ -62,14 +66,14 @@ def generate_knapsack_problems(file_path):
 
     Yields:
         tuple: A tuple containing:
-            - items: List of (benefit, weights) tuples for each item
-            - constraints: List of capacity constraints for each dimension
+            - benefits (list): List of n benefit values, one for each item
+            - items (list): List of d lists, where each inner list contains n weights
+                           (items[i][j] is the weight of item j in dimension i)
+            - constraints (list): List of d capacity constraints, one for each dimension
     '''
     knapsack_values = _get_knapsack_stream(file_path)
     amount_of_problems = int(next(knapsack_values))
 
     for _ in range(amount_of_problems):
-        num_of_items, dimensions, _ = islice(knapsack_values, 3)
-        items = _retrieve_all_items(num_of_items, dimensions, knapsack_values)
-        constraints = list(islice(knapsack_values, dimensions))
-        yield (items, constraints)
+        (benefits, items, constraints) = _read_problem_values(knapsack_values)
+        yield (benefits, items, constraints)
