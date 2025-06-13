@@ -29,13 +29,15 @@ def _f(solution, benefits, items, dimensions, excess_factor=2):
     Args:
         solution (numpy.ndarray): Binary array representing a solution
         benefits (numpy.ndarray): Array of benefit values for each item
-        items (numpy.ndarray): Array of shape (num_dimensions, num_items) containing weights
+        items (list): List of numpy.ndarray, where each array contains weights for a dimension
         dimensions (numpy.ndarray): Array of capacity constraints for each dimension
         excess_factor (float): Factor to penalize solutions that exceed constraints
 
     Returns:
         float: Fitness value of the solution (higher is better)
     '''
+    # Convert solution to float64 to prevent overflow
+    solution = solution.astype(np.float64)
     total_profit = np.dot(solution, benefits)
 
     for i in range(len(dimensions)):
@@ -47,9 +49,9 @@ def _f(solution, benefits, items, dimensions, excess_factor=2):
             excess = total_size * excess_factor
             penalty = total_profit * ((excess - dimensions[i]) / dimensions[i])
 
-            return (total_profit - penalty)
+            return float(total_profit - penalty)
 
-    return total_profit
+    return float(total_profit)
 
 
 def _select_parents(population, fitness_values):
@@ -113,7 +115,7 @@ def _mutate(child, mutation_rate):
     return child
 
 
-def _next_generation(population, fitness_values, crossover_rate=0.5, mutation_rate=0.1, elite_ratio=0.1):
+def _next_generation(population, fitness_values, crossover_rate, mutation_rate, elite_ratio):
     '''
     Generate the next generation through parent selection and crossover.
 
@@ -160,7 +162,8 @@ def solve_knapsack(
     num_of_generations=10_000,
     crossover_rate=0.8,
     mutation_rate=0.05,
-    elite_ratio=0.02
+    elite_ratio=0.05,
+    excess_factor=5
 ):
     '''
     Solve the multi-dimensional knapsack problem using a genetic algorithm.
@@ -174,6 +177,7 @@ def solve_knapsack(
         crossover_rate (float): Probability of performing crossover between parents
         mutation_rate (float): Probability of flipping each bit in a solution
         elite_ratio (float): Proportion of best solutions to preserve
+        excess_factor (float): Factor to penalize solutions that exceed constraints
 
     Returns:
         tuple: Two selected solutions (numpy.ndarray) to be used as parents
@@ -184,7 +188,7 @@ def solve_knapsack(
 
     num_of_items = len(benefits)
     population = _generate_initial_population(population_size, num_of_items)
-    fitness_values = np.array([_f(solution, benefits, items, constraints) for solution in population])
+    fitness_values = np.array([_f(solution, benefits, items, constraints, excess_factor) for solution in population])
 
     result = {
         'best_fitness': 0,
@@ -194,7 +198,7 @@ def solve_knapsack(
 
     for i in range(num_of_generations):
         population = _next_generation(population, fitness_values, crossover_rate, mutation_rate, elite_ratio)
-        fitness_values = np.array([_f(solution, benefits, items, constraints) for solution in population])
+        fitness_values = np.array([_f(solution, benefits, items, constraints, excess_factor) for solution in population])
         best_fitness = np.max(fitness_values)
 
         progress = ((i+1) / num_of_generations) * 100
