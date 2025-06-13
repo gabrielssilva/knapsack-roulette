@@ -19,7 +19,17 @@ def parse_args():
     return parser.parse_args()
 
 
-def is_solution_valid(solution, items, dimensions):
+def _is_solution_valid(solution, items, dimensions):
+    """Check if a solution is valid by verifying if it respects all dimension constraints.
+
+    Args:
+        solution (numpy.ndarray): Binary array representing the solution (1 = item included, 0 = item excluded)
+        items (numpy.ndarray): Array of items with their weights for each dimension
+        dimensions (numpy.ndarray): Array of capacity constraints for each dimension
+
+    Returns:
+        bool: True if the solution is valid (respects all constraints), False otherwise
+    """
     solution_dimensions = np.zeros(len(dimensions))
 
     for i in range(len(dimensions)):
@@ -28,7 +38,7 @@ def is_solution_valid(solution, items, dimensions):
     return np.all(solution_dimensions <= dimensions)
 
 
-def plot_generations(index, generations_plot):
+def _plot_generations(index, generations_plot):
     os.makedirs('charts', exist_ok=True)
 
     plt.plot([x[0] for x in generations_plot], [x[1] for x in generations_plot])
@@ -38,9 +48,22 @@ def plot_generations(index, generations_plot):
     plt.close()
 
 
+def _plot_problems_fitness(problem_fitnesses):
+    x = range(1, len(problem_fitnesses) + 1)  # Start from 1 for problem numbers
+
+    plt.bar(x, problem_fitnesses)
+    plt.xlabel('Problem Number')
+    plt.ylabel('Best Fitness')
+    plt.title('Best Fitness by Problem')
+    plt.xticks(x)  # Force integer ticks
+    plt.savefig('charts/problems_fitness.png')
+    plt.close()
+
+
 def main():
     args = parse_args()
     problems = generate_knapsack_problems(args.file)
+    problem_fitnesses = []
 
     try:
         for i in range(args.num_of_problems):
@@ -68,22 +91,28 @@ def main():
                     excess_factor=args.excess_factor
                 )
 
-                valid_solution = is_solution_valid(result['best_solution'], items, dimensions)
+                valid_solution = _is_solution_valid(result['best_solution'], items, dimensions)
                 attempt += 1
 
             if valid_solution:
                 print('Best solution:')
                 print(result['best_solution'])
                 print(f'Best fitness: {result['best_fitness']}')
-                plot_generations(i, result['generations_plot'])
+
+                _plot_generations(i, result['generations_plot'])
+                problem_fitnesses.append(result['best_fitness'])
             else:
                 print(f'Failed to find a valid solution after {max_attempts} attempts')
+                problem_fitnesses.append(0)
 
     except StopIteration:
         print(f'Reached end of file after solving {i + 1} problems')
     except KeyboardInterrupt:
         print('\n\nOkay, I\'ll stop here.')
-        print(f'Successfully solved {i} problems.')
+        print(f'Successfully solved {i} problems, saved details to charts/')
+    finally:
+        if problem_fitnesses:
+            _plot_problems_fitness(problem_fitnesses)
 
 
 if __name__ == '__main__':
