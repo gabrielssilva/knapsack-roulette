@@ -28,18 +28,13 @@ The algorithm features:
 
 1. Optional: Create a virtual environment:
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 2. Case you created a virutal environemnt, activate it:
-   - On Windows:
-   ```bash
-   venv\Scripts\activate
-   ```
-   - On Unix or MacOS:
-   ```bash
-   source venv/bin/activate
-   ```
+```bash
+source .venv/bin/activate
+```
 
 3. Install the required dependencies:
 ```bash
