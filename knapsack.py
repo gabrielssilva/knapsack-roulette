@@ -81,6 +81,9 @@ def main():
 
     except StopIteration:
         print(f'Reached end of file after solving {i + 1} problems')
+    except KeyboardInterrupt:
+        print('\n\nOkay, I\'ll stop here.')
+        print(f'Successfully solved {i} problems.')
 
 
 if __name__ == '__main__':
